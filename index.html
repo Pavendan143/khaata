@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Khaata — Expense &amp; Loan Ledger</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#22344a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Khaata">
+<meta name="mobile-web-app-capable" content="yes">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{
@@ -2661,6 +2669,9 @@ showTab(activeTab);
 updateLoanBadge();
 initFolder();
 initDrive();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(e => console.error('Service worker failed:', e)); });
+}
 
 // test / debug hook (harmless)
 window.__khaata = {get db(){ return db; }, mergeDB, parseBackup, normDB, sig, buildWorkbook, flushPersist, loanCalc, totals, invSummary, modeLabel};
