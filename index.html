@@ -174,6 +174,8 @@ select.input{width:auto;font-family:var(--mono)}
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .dash-grid .card{margin-bottom:16px}
 .scroll-box{max-height:330px;overflow-y:auto;scrollbar-width:thin}
+.exp-scroll{max-height:420px}
+.exp-scroll .tbl thead th{position:sticky;top:0;z-index:1}
 .donut-wrap{display:flex;align-items:center;gap:20px;padding:18px;flex-wrap:wrap}
 .donut-svg{flex:0 0 180px;width:180px;height:180px}
 .donut-svg path{cursor:pointer;transition:opacity .15s}
@@ -424,10 +426,12 @@ ul.safe li{margin-bottom:6px}
       <div>
         <div class="card">
           <div class="card-head"><h2>Monthly expenses</h2><span class="meta" id="expMeta"></span></div>
+          <div class="scroll-box exp-scroll">
           <table class="tbl stack">
             <thead><tr><th class="sel"><input type="checkbox" id="expSelAll" title="Select all"></th><th style="width:30%">Category</th><th>Paid via</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Remaining</th><th></th></tr></thead>
             <tbody id="expBody"></tbody>
           </table>
+          </div>
           <div class="totals" id="expTotals"></div>
           <div class="totals chk-sum" id="expSelTotals" hidden></div>
           <div class="card-foot">
