@@ -123,6 +123,10 @@ td.sel input,th.sel input{width:16px;height:16px;cursor:pointer;accent-color:var
 .chip.info{color:var(--navy);background:var(--navy-tint);border-color:#cfd8e3}
 button.chip{cursor:pointer}
 button.chip:hover{filter:brightness(.96)}
+.tag-list{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px}
+.tag-list .chip{font-size:12px;padding:5px 7px 5px 12px}
+.tag-list .chip button{border:0;background:none;color:var(--ink-3);cursor:pointer;padding:3px 4px;margin-left:2px;line-height:1;border-radius:50%}
+.tag-list .chip button:hover{color:var(--red);background:var(--red-tint)}
 
 /* ---------- ledger ---------- */
 .banner{display:none;align-items:center;gap:14px;flex-wrap:wrap;background:var(--amber-tint);border:1px solid #ecd3a3;border-left:4px solid var(--brass);border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13.5px}
@@ -174,7 +178,8 @@ select.input{width:auto;font-family:var(--mono)}
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .dash-grid .card{margin-bottom:16px}
 .scroll-box{max-height:330px;overflow-y:auto;scrollbar-width:thin}
-.exp-scroll{max-height:420px}
+.tbl-wrap{overflow-x:auto}
+.exp-scroll{max-height:420px;overflow-x:auto}
 .exp-scroll .tbl thead th{position:sticky;top:0;z-index:1}
 .donut-wrap{display:flex;align-items:center;gap:20px;padding:18px;flex-wrap:wrap}
 .donut-svg{flex:0 0 180px;width:180px;height:180px}
@@ -442,12 +447,27 @@ ul.safe li{margin-bottom:6px}
 
         <div class="card">
           <div class="card-head"><h2>Credit card bills</h2><span class="meta" id="cardMeta"></span></div>
+          <div class="tbl-wrap">
           <table class="tbl stack">
             <thead><tr><th style="width:22%">Card</th><th class="r">Bill</th><th class="r">Paid</th><th class="r">Remaining / status</th><th>Due date</th><th></th></tr></thead>
             <tbody id="cardBody"></tbody>
           </table>
+          </div>
           <div class="totals" id="cardTotals"></div>
           <div class="card-foot"><button class="btn ghost sm" id="addCard" type="button">+ Add credit card</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>Utility bills</h2><span class="meta" id="utilMeta"></span></div>
+          <p class="note">EB / electricity, water, gas, internet, phone — any recurring bill that isn't on a card. Carries forward to next month automatically.</p>
+          <div class="tbl-wrap">
+          <table class="tbl stack">
+            <thead><tr><th style="width:22%">Bill</th><th style="width:16%">Category</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Remaining / status</th><th>Due date</th><th></th></tr></thead>
+            <tbody id="utilBody"></tbody>
+          </table>
+          </div>
+          <div class="totals" id="utilTotals"></div>
+          <div class="card-foot"><button class="btn ghost sm" id="addUtil" type="button">+ Add bill</button></div>
         </div>
 
         <div class="card">
@@ -483,6 +503,12 @@ ul.safe li{margin-bottom:6px}
           <div class="card-head"><h2>My cards</h2><span class="meta">shown in “Paid via” every month</span></div>
           <div id="myCards"></div>
           <div class="card-foot"><button class="btn ghost sm" id="addMyCard" type="button">+ Add card</button></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>My utility bill categories</h2><span class="meta">shown in the Category dropdown every month</span></div>
+          <div id="myUtils"></div>
+          <div class="card-foot"><button class="btn ghost sm" id="addMyUtil" type="button">+ Add category</button></div>
         </div>
 
         <div class="card">
@@ -525,13 +551,16 @@ ul.safe li{margin-bottom:6px}
       </div>
       <div class="dash-grid">
         <div class="card"><div class="card-head"><h2>Credit cards</h2><span class="meta" id="ccMeta"></span></div><div id="ccBox" class="scroll-box"></div><div class="totals" id="ccTotals" hidden></div></div>
-        <div class="card"><div class="card-head"><h2>Last 6 months</h2><span class="meta">tap a month</span></div><div id="trendBox" class="trend-wrap"></div></div>
+        <div class="card"><div class="card-head"><h2>Utility bills</h2><span class="meta" id="dutilMeta"></span></div><div id="dutilBox" class="scroll-box"></div><div class="totals" id="dutilTotals" hidden></div></div>
       </div>
       <div class="dash-grid">
+        <div class="card"><div class="card-head"><h2>Last 6 months</h2><span class="meta">tap a month</span></div><div id="trendBox" class="trend-wrap"></div></div>
         <div class="card"><div class="card-head"><h2>Paid via</h2><span class="meta" id="pmMeta"></span></div><div id="pmBox" class="scroll-box"></div></div>
-        <div class="card"><div class="card-head"><h2>Investments</h2><span class="meta" id="dinvMeta"></span></div><div id="dinvBox"></div></div>
       </div>
-      <div class="card"><div class="card-head"><h2>Loan EMIs this month</h2><span class="meta" id="dlMeta"></span></div><div id="dashLoans"></div></div>
+      <div class="dash-grid">
+        <div class="card"><div class="card-head"><h2>Investments</h2><span class="meta" id="dinvMeta"></span></div><div id="dinvBox"></div></div>
+        <div class="card"><div class="card-head"><h2>Loan EMIs this month</h2><span class="meta" id="dlMeta"></span></div><div id="dashLoans"></div></div>
+      </div>
     </div>
   </section>
 
@@ -597,7 +626,7 @@ ul.safe li{margin-bottom:6px}
         <div class="card">
           <div class="card-head"><h2>Excel workbook (.xlsx)</h2></div>
           <div class="card-body">
-            <p class="note">Exports a workbook with a <b>Summary</b> sheet of all months, one sheet per month (expenses with payment method, card bills, income, investments), an <b>Investments</b> month-by-month sheet with holdings, a <b>My cards</b> sheet, a <b>Loans</b> overview and a full EMI schedule sheet for every loan. Amounts are real numbers with ₹ formatting and dates are real Excel dates.</p>
+            <p class="note">Exports a workbook with a <b>Summary</b> sheet of all months, one sheet per month (expenses with payment method, card bills, utility bills, income, investments), an <b>Investments</b> month-by-month sheet with holdings, a <b>My cards</b> sheet, a <b>Loans</b> overview and a full EMI schedule sheet for every loan. Amounts are real numbers with ₹ formatting and dates are real Excel dates.</p>
             <button class="btn" id="exportXlsx" type="button">⬇ Export to Excel</button>
           </div>
         </div>
@@ -746,11 +775,12 @@ function plural(n, w){ return n + ' ' + w + (n === 1 ? '' : 's'); }
    ===================================================================== */
 const INV_TYPES = {mf: 'Mutual fund', equity: 'Equity', other: 'Other'};
 const MODES = {cash: 'Cash', upi: 'UPI', netbanking: 'Netbanking', debit: 'Debit card', credit: 'Credit card'};
-function emptyDB(){ return {months: {}, loans: {}, deleted: {months: {}, loans: {}}, settings: {cards: [], updatedAt: 0}}; }
+function emptyDB(){ return {months: {}, loans: {}, deleted: {months: {}, loans: {}}, settings: {cards: [], utilBills: [], updatedAt: 0}}; }
 function normSettings(st){
   st = (st && typeof st === 'object') ? st : {};
   return {
     cards: normRows(st.cards, (r, id) => ({id, name: String(r.name ?? '').slice(0, 60), type: r.type === 'debit' ? 'debit' : 'credit'}), 'card'),
+    utilBills: normRows(st.utilBills, (r, id) => ({id, name: String(r.name ?? '').slice(0, 40)}), 'ub'),
     updatedAt: Math.max(0, Number(st.updatedAt) || 0)
   };
 }
@@ -764,6 +794,7 @@ function normMonth(m){
     salary: r2(m.salary),
     expenses: normRows(m.expenses, (r, id) => ({id, cat: String(r.cat ?? ''), amt: r2(r.amt), paid: r2(r.paid), mode: String(r.mode ?? '').slice(0, 60)}), 'e'),
     cards: normRows(m.cards, (r, id) => ({id, name: String(r.name ?? ''), bill: r2(r.bill), paid: r2(r.paid), due: validISO(r.due)}), 'c'),
+    utilities: normRows(m.utilities, (r, id) => ({id, name: String(r.name ?? '').slice(0, 60), category: String(r.category ?? '').slice(0, 40), bill: r2(r.bill), paid: r2(r.paid), due: validISO(r.due)}), 'u'),
     credits: normRows(m.credits, (r, id) => ({id, cat: String(r.cat ?? ''), amt: r2(r.amt)}), 'k'),
     investments: normRows(m.investments, (r, id) => ({id, name: String(r.name ?? '').slice(0, 80), type: INV_TYPES[r.type] ? r.type : 'mf', inv: Math.max(0, r2(r.inv)), red: Math.max(0, r2(r.red))}), 'v'),
     updatedAt: Math.max(0, Number(m.updatedAt) || 0)
@@ -859,7 +890,7 @@ function mergeDB(base, inc){
       }
     });
   });
-  const bs = base.settings, is = inc.settings, sameCards = JSON.stringify(bs.cards) === JSON.stringify(is.cards);
+  const bs = base.settings, is = inc.settings, sameCards = JSON.stringify(bs.cards) === JSON.stringify(is.cards) && JSON.stringify(bs.utilBills) === JSON.stringify(is.utilBills);
   if(is.updatedAt > bs.updatedAt){ out.settings = clone(is); stats.settings = sameCards ? 'same' : 'file'; }
   else stats.settings = sameCards ? 'same' : (is.updatedAt ? 'yours' : 'none');
   return {db: out, stats, changed: sig(out) !== sig(base)};
@@ -872,17 +903,18 @@ function totals(m){
   const t = {
     salary: num(m.salary), credit: sum(m.credits, 'amt'),
     expAmt: sum(m.expenses, 'amt'), expPaid: sum(m.expenses, 'paid'), expRem: pos(m.expenses, 'amt', 'paid'),
-    cardBill: sum(m.cards, 'bill'), cardPaid: sum(m.cards, 'paid'), cardRem: pos(m.cards, 'bill', 'paid')
+    cardBill: sum(m.cards, 'bill'), cardPaid: sum(m.cards, 'paid'), cardRem: pos(m.cards, 'bill', 'paid'),
+    utilBill: sum(m.utilities, 'bill'), utilPaid: sum(m.utilities, 'paid'), utilRem: pos(m.utilities, 'bill', 'paid')
   };
   t.income = t.salary + t.credit;
-  t.committed = t.expAmt + t.cardBill;
-  t.paid = t.expPaid + t.cardPaid;
-  t.pending = t.expRem + t.cardRem;
+  t.committed = t.expAmt + t.cardBill + t.utilBill;
+  t.paid = t.expPaid + t.cardPaid + t.utilPaid;
+  t.pending = t.expRem + t.cardRem + t.utilRem;
   t.inv = sum(m.investments, 'inv'); t.red = sum(m.investments, 'red'); t.netInv = t.inv - t.red;
   t.balance = t.income - t.committed - t.netInv;   // left once every bill is paid and investments done
   t.avail = t.income - t.paid - t.netInv;          // in hand right now
-  t.openItems = m.expenses.filter(r => num(r.amt) > num(r.paid)).length + m.cards.filter(r => num(r.bill) > num(r.paid)).length;
-  t.items = m.expenses.filter(r => num(r.amt) > 0).length + m.cards.filter(r => num(r.bill) > 0).length;
+  t.openItems = m.expenses.filter(r => num(r.amt) > num(r.paid)).length + m.cards.filter(r => num(r.bill) > num(r.paid)).length + m.utilities.filter(r => num(r.bill) > num(r.paid)).length;
+  t.items = m.expenses.filter(r => num(r.amt) > 0).length + m.cards.filter(r => num(r.bill) > 0).length + m.utilities.filter(r => num(r.bill) > 0).length;
   return t;
 }
 function cardStatus(r){
@@ -1023,7 +1055,11 @@ if(!db.settings.updatedAt && !db.settings.cards.length){
     const id = 'cc-' + n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
     if(seen.has(id)) return; seen.add(id); cards.push({id, name: n, type: 'credit'});
   }));
-  if(cards.length){ db.settings = {cards, updatedAt: 1}; writeLS(db); }
+  if(cards.length){ db.settings = {cards, updatedAt: 1, utilBills: db.settings.utilBills}; writeLS(db); }
+}
+if(!db.settings.utilBills.length){
+  db.settings.utilBills = [{id: uid('ub'), name: 'EB'}, {id: uid('ub'), name: 'Water'}, {id: uid('ub'), name: 'Other'}];
+  db.settings.updatedAt = Date.now(); writeLS(db);
 }
 
 /* ---------- persist pipeline ---------- */
@@ -1155,10 +1191,16 @@ function templateFor(key){
       if(r.due){ const day = Number(r.due.slice(8, 10)); const last = new Date(+key.slice(0, 4), +key.slice(5, 7), 0).getDate(); due = key + '-' + pad(Math.min(day, last)); }
       return {id: uid('c'), name: r.name, bill: 0, paid: 0, due};
     });
+    m.utilities = p.utilities.filter(r => r.name.trim()).map(r => {
+      let due = '';
+      if(r.due){ const day = Number(r.due.slice(8, 10)); const last = new Date(+key.slice(0, 4), +key.slice(5, 7), 0).getDate(); due = key + '-' + pad(Math.min(day, last)); }
+      return {id: uid('u'), name: r.name, category: r.category, bill: 0, paid: 0, due};
+    });
     m.credits = p.credits.filter(r => r.cat.trim()).map(r => ({id: uid('k'), cat: r.cat, amt: 0}));
   }
   if(!m.expenses.length) m.expenses = [{id: uid('e'), cat: 'Rent', amt: 0, paid: 0, mode: ''}, {id: uid('e'), cat: '', amt: 0, paid: 0, mode: ''}];
   if(!m.cards.length) m.cards = [{id: uid('c'), name: '', bill: 0, paid: 0, due: ''}];
+  if(!m.utilities.length) m.utilities = [{id: uid('u'), name: 'EB Bill', category: 'EB', bill: 0, paid: 0, due: ''}, {id: uid('u'), name: 'Water Bill', category: 'Water', bill: 0, paid: 0, due: ''}];
   if(!m.credits.length) m.credits = [{id: uid('k'), cat: '', amt: 0}];
   m._from = prevKey || '';
   return m;
@@ -1194,6 +1236,17 @@ function cardRow(r){
     <td class="acts"><div class="row-actions"><button class="iconbtn" type="button" data-act="payfull" title="Mark fully paid">✓</button><button class="iconbtn del" type="button" data-act="del" title="Delete card">✕</button></div></td>
   </tr>`;
 }
+function utilRow(r){
+  return `<tr data-id="${esc(r.id)}">
+    <td class="first full" data-label="Bill"><input class="input" data-f="name" value="${esc(r.name)}" placeholder="e.g. EB Bill, Water Bill" maxlength="60"></td>
+    <td class="full" data-label="Category"><select class="input" data-f="category" aria-label="Category">${utilCatOptions(r.category)}</select></td>
+    <td data-label="Amount"><input class="input num" data-f="bill" type="number" inputmode="decimal" min="0" step="0.01" value="${val0(r.bill)}" placeholder="0.00"></td>
+    <td data-label="Paid"><input class="input num" data-f="paid" type="number" inputmode="decimal" min="0" step="0.01" value="${val0(r.paid)}" placeholder="0.00"></td>
+    <td class="r out" data-label="Remaining"><span class="amt" data-out="rem"></span><div data-out="st" style="margin-top:3px"></div></td>
+    <td data-label="Due date"><input class="input" data-f="due" type="date" value="${esc(r.due)}"></td>
+    <td class="acts"><div class="row-actions"><button class="iconbtn" type="button" data-act="payfull" title="Mark fully paid">✓</button><button class="iconbtn del" type="button" data-act="del" title="Delete bill">✕</button></div></td>
+  </tr>`;
+}
 function creditRow(r){
   return `<tr data-id="${esc(r.id)}">
     <td class="first full" data-label="Source"><input class="input" data-f="cat" value="${esc(r.cat)}" placeholder="Source" maxlength="80"></td>
@@ -1222,6 +1275,11 @@ function renderMyCards(){
   updateCardSpent();
 }
 function updateCardSpent(){ const m = viewMonth(); $$('#myCards [data-spent]').forEach(el => el.textContent = money(cardSpent(m, el.dataset.spent))); }
+function renderMyUtils(){
+  const bills = db.settings.utilBills;
+  $('#myUtils').innerHTML = bills.length ? `<div class="tag-list">${bills.map(u => `<span class="chip" data-id="${esc(u.id)}">${esc(u.name)}<button type="button" data-uact="del" title="Remove category">✕</button></span>`).join('')}</div>`
+    : '<div class="mini-empty">Add categories like EB, Water, Gas — they show up in the Category dropdown for every bill.</div>';
+}
 function renderDatalists(){
   $('#ccList').innerHTML = db.settings.cards.filter(c => c.type === 'credit').map(c => `<option value="${esc(c.name)}">`).join('');
   const names = new Set(); Object.values(db.months).forEach(mm => mm.investments.forEach(r => { if(r.name.trim()) names.add(r.name.trim()); }));
@@ -1231,6 +1289,18 @@ function refreshModeSelects(){
   const m = viewMonth();
   $$('#expBody tr[data-id]').forEach(tr => { const r = m.expenses.find(x => x.id === tr.dataset.id), sel = $('select[data-f=mode]', tr); if(r && sel) sel.innerHTML = modeOptions(r.mode); });
   renderDatalists();
+}
+function utilCatOptions(sel){
+  const o = (v, l) => `<option value="${esc(v)}"${v === sel ? ' selected' : ''}>${esc(l)}</option>`;
+  const cats = db.settings.utilBills;
+  let h = o('', '— Select —') + cats.map(c => o(c.name, c.name)).join('');
+  if(sel && !cats.some(c => c.name === sel)) h += o(sel, sel);
+  h += '<option value="__add">＋ Add a new category…</option>';
+  return h;
+}
+function refreshUtilSelects(){
+  const m = viewMonth();
+  $$('#utilBody tr[data-id]').forEach(tr => { const r = m.utilities.find(x => x.id === tr.dataset.id), sel = $('select[data-f=category]', tr); if(r && sel) sel.innerHTML = utilCatOptions(r.category); });
 }
 function touchSettings(){ db.settings.updatedAt = Date.now(); changed(); }
 async function quickAddCard(defType){
@@ -1262,8 +1332,9 @@ function renderLedger(){
   expSelected = new Set([...expSelected].filter(id => m.expenses.some(r => r.id === id)));
   updateExpSelection();
   $('#invBody').innerHTML = m.investments.length ? m.investments.map(invRow).join('') : emptyRow(5, 'No investments this month — add SIPs, lump sums or redemptions.');
-  renderMyCards(); renderDatalists();
+  renderMyCards(); renderMyUtils(); renderDatalists();
   $('#cardBody').innerHTML = m.cards.length ? m.cards.map(cardRow).join('') : emptyRow(6, 'No cards this month.');
+  $('#utilBody').innerHTML = m.utilities.length ? m.utilities.map(utilRow).join('') : emptyRow(7, 'No bills this month.');
   $('#creditBody').innerHTML = m.credits.length ? m.credits.map(creditRow).join('') : emptyRow(3, 'No other credit.');
   updateLedgerOutputs();
   setSaveState();
@@ -1278,19 +1349,27 @@ function remCell(el, rem){
 function updateLedgerOutputs(){
   const m = viewMonth(), t = totals(m);
   $$('#expBody tr[data-id]').forEach(tr => { const r = m.expenses.find(x => x.id === tr.dataset.id); if(r) remCell($('[data-out=rem]', tr), num(r.amt) - num(r.paid)); });
-  let overdue = 0;
+  let overdue = 0, utilOverdue = 0;
   $$('#cardBody tr[data-id]').forEach(tr => {
     const r = m.cards.find(x => x.id === tr.dataset.id); if(!r) return;
     remCell($('[data-out=rem]', tr), num(r.bill) - num(r.paid));
     const st = cardStatus(r); if(st && st.cls === 'crit') overdue++;
     $('[data-out=st]', tr).innerHTML = chip(st);
   });
+  $$('#utilBody tr[data-id]').forEach(tr => {
+    const r = m.utilities.find(x => x.id === tr.dataset.id); if(!r) return;
+    remCell($('[data-out=rem]', tr), num(r.bill) - num(r.paid));
+    const st = cardStatus(r); if(st && st.cls === 'crit') utilOverdue++;
+    $('[data-out=st]', tr).innerHTML = chip(st);
+  });
   const tot = (a, b, c) => `<div><span>${a[0]}</span><b>${money(a[1])}</b></div><div><span>${b[0]}</span><b>${money(b[1])}</b></div><div><span>${c[0]}</span><b class="${c[1] > 0 ? 'neg' : 'pos'}">${money(c[1])}</b></div>`;
   $('#expTotals').innerHTML = tot(['Total amount', t.expAmt], ['Paid', t.expPaid], ['Remaining', t.expRem]);
   $('#cardTotals').innerHTML = tot(['Total bills', t.cardBill], ['Paid', t.cardPaid], ['Remaining', t.cardRem]);
+  $('#utilTotals').innerHTML = tot(['Total bills', t.utilBill], ['Paid', t.utilPaid], ['Remaining', t.utilRem]);
   const settled = m.expenses.filter(r => num(r.amt) > 0 && num(r.paid) >= num(r.amt)).length, withAmt = m.expenses.filter(r => num(r.amt) > 0).length;
   $('#expMeta').textContent = withAmt ? settled + ' / ' + withAmt + ' settled' : '';
   $('#cardMeta').innerHTML = overdue ? `<span class="chip crit"><span class="d"></span>${overdue} overdue</span>` : '';
+  $('#utilMeta').innerHTML = utilOverdue ? `<span class="chip crit"><span class="d"></span>${utilOverdue} overdue</span>` : '';
   $('#incomeMeta').textContent = t.income ? money(t.income) : '';
   const iv = invSummary(curKey, m);
   $('#invStrip').innerHTML = `<div><span>Portfolio till last month</span><b>${money(iv.open.total)}</b></div>
@@ -1325,7 +1404,7 @@ function setSaveState(){
 function bindTable(bodySel, listName, numFields, opts){
   const body = $(bodySel);
   body.addEventListener('input', e => {
-    const inp = e.target, tr = inp.closest('tr[data-id]'); if(!tr || !inp.dataset.f || inp.dataset.f === 'mode') return;
+    const inp = e.target, tr = inp.closest('tr[data-id]'); if(!tr || !inp.dataset.f || inp.dataset.f === 'mode' || inp.dataset.f === opts.selectField) return;
     const m = editMonth(), r = m[listName].find(x => x.id === tr.dataset.id); if(!r) return;
     const f = inp.dataset.f;
     if(numFields.includes(f)) r[f] = opts.allowNeg ? r2(inp.value) : Math.max(0, r2(inp.value));
@@ -1346,6 +1425,19 @@ function bindTable(bodySel, listName, numFields, opts){
       const m = editMonth(), r = m[listName].find(x => x.id === tr.dataset.id); if(!r) return;
       r.mode = v; changed();
       renderMyCards(); refreshModeSelects(); updateLedgerOutputs();
+      return;
+    }
+    if(opts.selectField && inp.dataset.f === opts.selectField){
+      const cur = viewMonth()[listName].find(x => x.id === tr.dataset.id); if(!cur) return;
+      let v = inp.value;
+      if(v === '__add'){
+        inp.value = cur[opts.selectField] || '';
+        v = await opts.onAddNew(); if(!v) return;
+      }
+      const m = editMonth(), r = m[listName].find(x => x.id === tr.dataset.id); if(!r) return;
+      r[opts.selectField] = v; changed();
+      if(opts.afterSelect) opts.afterSelect();
+      updateLedgerOutputs();
       return;
     }
     if(!numFields.includes(inp.dataset.f)) return;
@@ -1398,6 +1490,10 @@ $('#expSelAll').addEventListener('change', () => {
 });
 bindTable('#expBody', 'expenses', ['amt', 'paid'], {});
 bindTable('#cardBody', 'cards', ['bill', 'paid'], {});
+bindTable('#utilBody', 'utilities', ['bill', 'paid'], {selectField: 'category', onAddNew: async () => {
+  const id = await quickAddUtilBill(); if(!id) return null;
+  const u = db.settings.utilBills.find(x => x.id === id); return u ? u.name : null;
+}, afterSelect: () => { renderMyUtils(); refreshUtilSelects(); }});
 bindTable('#creditBody', 'credits', ['amt'], {allowNeg: true});
 bindTable('#invBody', 'investments', ['inv', 'red'], {});
 $('#myCards').addEventListener('input', e => {
@@ -1417,6 +1513,32 @@ $('#myCards').addEventListener('click', e => {
   }}});
 });
 $('#addMyCard').onclick = async () => { const id = await quickAddCard(); if(id){ renderMyCards(); refreshModeSelects(); } };
+$('#myUtils').addEventListener('click', e => {
+  const b = e.target.closest('[data-uact=del]'); if(!b) return;
+  const id = b.closest('[data-id]').dataset.id, idx = db.settings.utilBills.findIndex(u => u.id === id); if(idx < 0) return;
+  const [u] = db.settings.utilBills.splice(idx, 1);
+  touchSettings(); renderMyUtils(); refreshUtilSelects();
+  toast('Category removed from your list', {action: {label: 'Undo', fn: () => {
+    db.settings.utilBills.splice(Math.min(idx, db.settings.utilBills.length), 0, u); touchSettings(); renderMyUtils(); refreshUtilSelects();
+  }}});
+});
+async function quickAddUtilBill(){
+  let vals = null;
+  const ok = await modal({title: 'Add a category', enterValue: true, html: `
+    <div class="field"><label class="lbl" for="qu-name">Category</label><input class="input" id="qu-name" maxlength="40" placeholder="e.g. EB, Water, Gas, Internet"></div>
+    <div class="err-text" id="qu-err"></div>`,
+    buttons: [{label: 'Cancel', cls: 'ghost', value: false}, {label: 'Add', value: true, validate: () => {
+      const n = $('#qu-name').value.trim();
+      if(!n){ $('#qu-err').textContent = 'Enter a category name.'; return false; }
+      if(db.settings.utilBills.some(u => u.name.toLowerCase() === n.toLowerCase())){ $('#qu-err').textContent = 'That category is already in your list.'; return false; }
+      vals = {name: n}; return true;
+    }}]});
+  if(!ok || !vals) return null;
+  const u = {id: uid('ub'), name: vals.name};
+  db.settings.utilBills.push(u); touchSettings(); toast('Category added');
+  return u.id;
+}
+$('#addMyUtil').onclick = async () => { const id = await quickAddUtilBill(); if(id){ renderMyUtils(); refreshUtilSelects(); } };
 $('#addInv').onclick = () => addRow('investments', {id: uid('v'), name: '', type: 'mf', inv: 0, red: 0}, 'name');
 $('#invPortfolio').onclick = () => {
   const iv = invSummary(curKey, viewMonth()), rows = iv.holdings;
@@ -1435,6 +1557,7 @@ function addRow(list, row, focusF){
 }
 $('#addExp').onclick = () => addRow('expenses', {id: uid('e'), cat: '', amt: 0, paid: 0}, 'cat');
 $('#addCard').onclick = () => addRow('cards', {id: uid('c'), name: '', bill: 0, paid: 0, due: ''}, 'name');
+$('#addUtil').onclick = () => addRow('utilities', {id: uid('u'), name: '', category: '', bill: 0, paid: 0, due: ''}, 'name');
 $('#addCredit').onclick = () => addRow('credits', {id: uid('k'), cat: '', amt: 0}, 'cat');
 $('#payAllExp').onclick = async () => {
   const open = viewMonth().expenses.filter(r => num(r.amt) > num(r.paid));
@@ -1494,7 +1617,7 @@ function renderDashboard(){
 
   const set = (id, v, hint, negRed) => { const el = $('#' + id); el.textContent = money(v); el.className = 'value' + (negRed && v < 0 ? ' neg' : ''); $('#' + id + 'H').innerHTML = hint; };
   set('stIncome', t.income, 'Salary ' + short(t.salary) + (t.credit ? ' + credit ' + short(t.credit) : ''));
-  let ch = 'Expenses ' + short(t.expAmt) + ' · Cards ' + short(t.cardBill);
+  let ch = 'Expenses ' + short(t.expAmt) + ' · Cards ' + short(t.cardBill) + (t.utilBill ? ' · Bills ' + short(t.utilBill) : '');
   if(pt && pt.committed > 0){
     const c = (t.committed - pt.committed) / pt.committed * 100;
     ch += `<br><span class="delta ${c > 0.5 ? 'up' : c < -0.5 ? 'down' : ''}">${c > 0.5 ? '▲' : c < -0.5 ? '▼' : '•'} ${Math.abs(c).toFixed(0)}% vs ${monthShort(prevKey)}</span>`;
@@ -1503,12 +1626,13 @@ function renderDashboard(){
   set('stPending', t.pending, t.pending > 0 ? plural(t.openItems, 'item') + ' open' : 'All settled ✓');
   set('stLeft', t.balance, t.income > 0 ? Math.round(t.balance / t.income * 100) + '% of income' : '', true);
 
-  renderDonut(d, t); renderProgress(d); renderCC(d); renderTrend(dashKey); renderDashLoans(dashKey); renderPayModes(d); renderDashInv(dashKey);
+  renderDonut(d, t); renderProgress(d); renderCC(d); renderDashUtil(d); renderTrend(dashKey); renderDashLoans(dashKey); renderPayModes(d); renderDashInv(dashKey);
 }
 function renderDonut(d, t){
   const box = $('#donutBox');
   let items = d.expenses.map(r => ({name: r.cat.trim() || '(unnamed)', val: num(r.amt)})).filter(r => r.val > 0);
   if(t.cardBill > 0) items.push({name: 'Credit card bills', val: t.cardBill});
+  if(t.utilBill > 0) items.push({name: 'Utility bills', val: t.utilBill});
   items.sort((a, b) => b.val - a.val);
   const total = items.reduce((s, r) => s + r.val, 0);
   $('#donutMeta').textContent = items.length ? items.length + (items.length === 1 ? ' category' : ' categories') : '';
@@ -1540,14 +1664,15 @@ function renderDonut(d, t){
 function renderProgress(d){
   const box = $('#progBox');
   const items = d.expenses.filter(r => num(r.amt) > 0).map(r => ({name: r.cat.trim() || '(unnamed)', amt: num(r.amt), paid: num(r.paid)}))
-    .concat(d.cards.filter(r => num(r.bill) > 0).map(r => ({name: r.name.trim() || '(card)', amt: num(r.bill), paid: num(r.paid), card: true})));
+    .concat(d.cards.filter(r => num(r.bill) > 0).map(r => ({name: r.name.trim() || '(card)', amt: num(r.bill), paid: num(r.paid), tag: 'CARD'})))
+    .concat(d.utilities.filter(r => num(r.bill) > 0).map(r => ({name: r.name.trim() || '(bill)', amt: num(r.bill), paid: num(r.paid), tag: 'BILL'})));
   items.sort((a, b) => (b.amt - b.paid) - (a.amt - a.paid));
   const settled = items.filter(i => i.paid >= i.amt).length;
   $('#progMeta').textContent = items.length ? settled + '/' + items.length + ' settled' : '';
   if(!items.length){ box.innerHTML = '<div class="mini-empty">Nothing to pay this month.</div>'; return; }
   box.innerHTML = '<div class="prog-list">' + items.map(it => {
     const done = it.paid >= it.amt, p = Math.min(100, it.paid / it.amt * 100);
-    return `<div class="prog-item"><div class="prog-top"><span class="nm">${esc(it.name)}${it.card ? '<span class="tag">CARD</span>' : ''}</span>${done ? chip({cls: 'good', text: 'Paid'}) : `<span class="amt due">${money(it.amt - it.paid)} left</span>`}</div>
+    return `<div class="prog-item"><div class="prog-top"><span class="nm">${esc(it.name)}${it.tag ? `<span class="tag">${it.tag}</span>` : ''}</span>${done ? chip({cls: 'good', text: 'Paid'}) : `<span class="amt due">${money(it.amt - it.paid)} left</span>`}</div>
       <div class="track"><div class="${done ? 'done' : ''}" style="width:${p.toFixed(1)}%"></div></div>
       <div class="prog-sub"><span>paid ${money(it.paid)}</span><span>of ${money(it.amt)}</span></div></div>`;
   }).join('') + '</div>';
@@ -1566,6 +1691,21 @@ function renderCC(d){
   tb.hidden = false;
   tb.innerHTML = `<div><span>Total bills</span><b>${money(bill)}</b></div><div><span>Paid</span><b>${money(paid)}</b></div><div><span>Remaining</span><b class="${bill - paid > 0 ? 'neg' : 'pos'}">${money(Math.max(0, bill - paid))}</b></div>`;
   $('#ccMeta').textContent = plural(cards.length, 'card');
+}
+function renderDashUtil(d){
+  const box = $('#dutilBox'), tb = $('#dutilTotals');
+  const rows = d.utilities.filter(r => r.name.trim() || num(r.bill) > 0);
+  if(!rows.length){ $('#dutilMeta').textContent = ''; tb.hidden = true; box.innerHTML = '<div class="mini-empty">No utility bills this month.</div>'; return; }
+  const rank = s => !s ? 4 : s.cls === 'crit' ? 0 : s.cls === 'warn' ? 1 : s.cls === 'info' ? 2 : s.cls === '' ? 2 : 3;
+  const list = rows.map(r => ({r, st: cardStatus(r)})).sort((a, b) => rank(a.st) - rank(b.st) || (a.r.due || '9').localeCompare(b.r.due || '9'));
+  let bill = 0, paid = 0;
+  box.innerHTML = list.map(({r, st}) => {
+    bill += num(r.bill); paid += num(r.paid);
+    return `<div class="list-row"><div><div class="t">${esc(r.name || '(bill)')}</div><div class="s">${r.category ? esc(r.category) + ' · ' : ''}due ${r.due ? fmtDate(r.due) : '—'} · paid ${money(r.paid)}</div></div><div class="rt"><span class="amt" style="font-weight:700">${money(r.bill)}</span>${chip(st)}</div></div>`;
+  }).join('');
+  tb.hidden = false;
+  tb.innerHTML = `<div><span>Total bills</span><b>${money(bill)}</b></div><div><span>Paid</span><b>${money(paid)}</b></div><div><span>Remaining</span><b class="${bill - paid > 0 ? 'neg' : 'pos'}">${money(Math.max(0, bill - paid))}</b></div>`;
+  $('#dutilMeta').textContent = plural(rows.length, 'bill');
 }
 function renderTrend(key){
   const box = $('#trendBox');
@@ -1909,7 +2049,7 @@ async function importFile(file){
   const row = (lab, s) => `<tr><td>${lab}</td><td>${s.added}</td><td>${s.updated}</td><td>${s.kept}</td><td>${s.same}</td><td>${s.removed}</td></tr>`;
   const html = `<p><b>${esc(file.name)}</b> contains ${plural(nm, 'month')} and ${plural(nl, 'loan')}.</p>
     <table class="imp-table"><thead><tr><th></th><th>New</th><th>Newer in file</th><th>Yours newer</th><th>Same</th><th>Deleted</th></tr></thead><tbody>${row('Months', pv.months)}${row('Loans', pv.loans)}</tbody></table>
-    <p>Saved cards: ${pv.settings === 'file' ? 'the file’s list is newer and will be used' : pv.settings === 'yours' ? 'your list is newer and is kept' : 'no change'}.</p>
+    <p>Saved cards &amp; bills: ${pv.settings === 'file' ? 'the file’s list is newer and will be used' : pv.settings === 'yours' ? 'your list is newer and is kept' : 'no change'}.</p>
     <p><b>Merge</b> adds new items and takes the file's copy only where it was edited more recently — nothing newer of yours is lost.</p>
     <p><b>Replace everything</b> makes this app match the file exactly (on every synced device). A safety backup of your current data downloads first.</p>`;
   const choice = await modal({title: 'Import backup', html, buttons: [{label: 'Cancel', cls: 'ghost', value: null}, {label: 'Replace everything', cls: 'danger', value: 'replace'}, {label: 'Merge (recommended)', value: 'merge'}]});
@@ -1974,22 +2114,22 @@ function buildWorkbook(){
   S.add(['Khaata — exported ' + new Date().toLocaleString('en-IN')]);
   S.blank();
   if(mk.length){
-    S.add(['Month', 'Salary', 'Other credit', 'Total income', 'Expenses', 'Expenses paid', 'Card bills', 'Card bills paid', 'Total commitments', 'Total paid', 'Still to pay', 'Invested', 'Redeemed', 'Net invested', 'Available balance', 'Left after bills & investing', 'Portfolio (at cost)', 'Last edited']);
-    const sum = new Array(15).fill(0);
+    S.add(['Month', 'Salary', 'Other credit', 'Total income', 'Expenses', 'Expenses paid', 'Card bills', 'Card bills paid', 'Utility bills', 'Utility bills paid', 'Total commitments', 'Total paid', 'Still to pay', 'Invested', 'Redeemed', 'Net invested', 'Available balance', 'Left after bills & investing', 'Portfolio (at cost)', 'Last edited']);
+    const sum = new Array(17).fill(0);
     mk.forEach(k => {
       const t = totals(db.months[k]), iv = invSummary(k);
-      const v = [t.salary, t.credit, t.income, t.expAmt, t.expPaid, t.cardBill, t.cardPaid, t.committed, t.paid, t.pending, t.inv, t.red, t.netInv, t.avail, t.balance];
+      const v = [t.salary, t.credit, t.income, t.expAmt, t.expPaid, t.cardBill, t.cardPaid, t.utilBill, t.utilPaid, t.committed, t.paid, t.pending, t.inv, t.red, t.netInv, t.avail, t.balance];
       v.forEach((x, i) => sum[i] += x);
-      S.add([monthLabel(k)].concat(v, [iv.close.total, db.months[k].updatedAt ? new Date(db.months[k].updatedAt).toLocaleString('en-IN') : '']), [null].concat(M(16)));
+      S.add([monthLabel(k)].concat(v, [iv.close.total, db.months[k].updatedAt ? new Date(db.months[k].updatedAt).toLocaleString('en-IN') : '']), [null].concat(M(18)));
     });
-    S.add(['TOTAL'].concat(sum), [null].concat(M(15)));
+    S.add(['TOTAL'].concat(sum), [null].concat(M(17)));
   }else S.add(['No monthly data yet']);
   if(loans.length){
     S.blank(); S.add(['Loans']);
     S.add(['Loan', 'Monthly EMI', 'Principal outstanding', 'Installments left', 'Overdue']);
     loans.forEach(l => { const c = loanCalc(l), s = loanStats(l, c); S.add([l.name, c.emi, s.outstanding, s.leftN, s.overdue], [null, 'm', 'm', 'i', 'i']); });
   }
-  XLSX.utils.book_append_sheet(wb, S.build([20, 14, 14, 14, 14, 14, 14, 14, 17, 14, 14, 13, 13, 13, 17, 20, 17, 20]), sname('Summary'));
+  XLSX.utils.book_append_sheet(wb, S.build([20, 14, 14, 14, 14, 14, 14, 14, 14, 14, 17, 14, 14, 13, 13, 13, 17, 20, 17, 20]), sname('Summary'));
 
   // ---- one sheet per month ----
   mk.forEach(k => {
@@ -1998,7 +2138,7 @@ function buildWorkbook(){
     W.add(['Salary', t.salary], [null, 'm']);
     W.add(['Other credit received', t.credit], [null, 'm']);
     W.add(['Total income', t.income], [null, 'm']);
-    W.add(['Total commitments (expenses + card bills)', t.committed], [null, 'm']);
+    W.add(['Total commitments (expenses + card bills + utility bills)', t.committed], [null, 'm']);
     W.add(['Total paid', t.paid], [null, 'm']);
     W.add(['Still to pay', t.pending], [null, 'm']);
     W.add(['Invested this month', t.inv], [null, 'm']);
@@ -2019,6 +2159,10 @@ function buildWorkbook(){
     W.add(['Card', 'Bill amount', 'Paid', 'Remaining', 'Due date', 'Status']);
     m.cards.filter(r => r.name.trim() || r.bill || r.paid).forEach(r => { const st = cardStatus(r); W.add([r.name || '(card)', r.bill, r.paid, r.bill - r.paid, xd(r.due), st ? st.text : ''], [null, 'm', 'm', 'm', 'd']); });
     W.add(['Total', t.cardBill, t.cardPaid, t.cardBill - t.cardPaid], [null, 'm', 'm', 'm']);
+    W.blank().add(['UTILITY BILLS']);
+    W.add(['Bill', 'Type', 'Amount', 'Paid', 'Remaining', 'Due date', 'Status']);
+    m.utilities.filter(r => r.name.trim() || r.bill || r.paid).forEach(r => { const st = cardStatus(r); W.add([r.name || '(bill)', r.category, r.bill, r.paid, r.bill - r.paid, xd(r.due), st ? st.text : ''], [null, null, 'm', 'm', 'm', 'd']); });
+    W.add(['Total', '', t.utilBill, t.utilPaid, t.utilBill - t.utilPaid], [null, null, 'm', 'm', 'm']);
     W.blank().add(['OTHER CREDIT RECEIVED']);
     W.add(['Source', 'Amount']);
     m.credits.filter(r => r.cat.trim() || r.amt).forEach(r => W.add([r.cat || '(unnamed)', r.amt], [null, 'm']));
