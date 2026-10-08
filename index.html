@@ -108,6 +108,11 @@ table.tbl{width:100%;border-collapse:collapse}
 .totals span{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-2)}
 .totals b{font-family:var(--mono);font-size:15px;white-space:nowrap}
 .mini-empty{padding:28px 18px;text-align:center;color:var(--ink-2);font-size:13px}
+th.sel,td.sel{width:34px;text-align:center}
+td.sel input,th.sel input{width:16px;height:16px;cursor:pointer;accent-color:var(--navy)}
+.totals.chk-sum{border-top-color:var(--brass);background:var(--amber-tint)}
+.totals.chk-sum>div{background:var(--amber-tint)}
+.totals.chk-sum b{color:var(--amber)}
 
 /* ---------- chips ---------- */
 .chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;padding:3px 9px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);background:var(--paper);white-space:nowrap;line-height:1.5}
@@ -356,6 +361,8 @@ ul.safe li{margin-bottom:6px}
   .tbl.stack td.first{padding-right:76px}
   .tbl.stack td.r{text-align:left}
   .tbl.stack td.acts{position:absolute;top:8px;right:6px;width:auto}
+  .tbl.stack td.sel{position:absolute;top:10px;left:6px;width:auto}
+  .tbl.stack #expBody td.first{padding-left:26px}
   .tbl.stack .input{border-color:var(--rule);background:#fffdf7}
   .tbl.stack .input.num{text-align:left;min-width:0}
   .tbl.stack td.first .input{min-width:0}
@@ -418,10 +425,11 @@ ul.safe li{margin-bottom:6px}
         <div class="card">
           <div class="card-head"><h2>Monthly expenses</h2><span class="meta" id="expMeta"></span></div>
           <table class="tbl stack">
-            <thead><tr><th style="width:30%">Category</th><th>Paid via</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Remaining</th><th></th></tr></thead>
+            <thead><tr><th class="sel"><input type="checkbox" id="expSelAll" title="Select all"></th><th style="width:30%">Category</th><th>Paid via</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Remaining</th><th></th></tr></thead>
             <tbody id="expBody"></tbody>
           </table>
           <div class="totals" id="expTotals"></div>
+          <div class="totals chk-sum" id="expSelTotals" hidden></div>
           <div class="card-foot">
             <button class="btn ghost sm" id="addExp" type="button">+ Add category</button>
             <button class="btn ghost sm" id="payAllExp" type="button">✓ Mark all paid</button>
@@ -1110,6 +1118,7 @@ function renderTab(t){
   else if(t === 'data') renderData();
 }
 let ledgerStale = false;
+let expSelected = new Set();
 function refreshViews(){
   updateLoanBadge(); updateDataStats();
   if(activeTab === 'ledger'){
@@ -1162,6 +1171,7 @@ const val0 = v => num(v) ? String(v) : '';
 
 function expRow(r){
   return `<tr data-id="${esc(r.id)}">
+    <td class="sel"><input type="checkbox" class="rowchk" data-id="${esc(r.id)}"${expSelected.has(r.id) ? ' checked' : ''}></td>
     <td class="first full" data-label="Category"><input class="input" data-f="cat" value="${esc(r.cat)}" placeholder="Category" maxlength="80"></td>
     <td class="full" data-label="Paid via"><select class="input" data-f="mode" aria-label="Paid via">${modeOptions(r.mode)}</select></td>
     <td data-label="Amount"><input class="input num" data-f="amt" type="number" inputmode="decimal" min="0" step="0.01" value="${val0(r.amt)}" placeholder="0.00"></td>
@@ -1244,7 +1254,9 @@ function renderLedger(){
   $('#monthPicker').value = curKey;
   $('#monthTitle').textContent = monthLabel(curKey);
   $('#salaryInput').value = val0(m.salary);
-  $('#expBody').innerHTML = m.expenses.length ? m.expenses.map(expRow).join('') : emptyRow(6, 'No categories — add one below.');
+  $('#expBody').innerHTML = m.expenses.length ? m.expenses.map(expRow).join('') : emptyRow(7, 'No categories — add one below.');
+  expSelected = new Set([...expSelected].filter(id => m.expenses.some(r => r.id === id)));
+  updateExpSelection();
   $('#invBody').innerHTML = m.investments.length ? m.investments.map(invRow).join('') : emptyRow(5, 'No investments this month — add SIPs, lump sums or redemptions.');
   renderMyCards(); renderDatalists();
   $('#cardBody').innerHTML = m.cards.length ? m.cards.map(cardRow).join('') : emptyRow(6, 'No cards this month.');
@@ -1355,6 +1367,31 @@ function bindTable(bodySel, listName, numFields, opts){
     }
   });
 }
+function updateExpSelection(){
+  const box = $('#expSelTotals'), all = $('#expSelAll'); if(!box || !all) return;
+  const m = viewMonth();
+  const rows = m.expenses.filter(r => expSelected.has(r.id));
+  const n = rows.length;
+  box.hidden = n === 0;
+  if(n){
+    const amt = rows.reduce((s, r) => s + num(r.amt), 0), paid = rows.reduce((s, r) => s + num(r.paid), 0);
+    box.innerHTML = `<div><span>${plural(n, 'row')} selected</span><b>&nbsp;</b></div><div><span>Amount</span><b>${money(amt)}</b></div><div><span>Paid</span><b>${money(paid)}</b></div>`;
+  }
+  const total = m.expenses.length;
+  all.indeterminate = n > 0 && n < total;
+  all.checked = total > 0 && n === total;
+}
+$('#expBody').addEventListener('change', e => {
+  const cb = e.target.closest('.rowchk'); if(!cb) return;
+  if(cb.checked) expSelected.add(cb.dataset.id); else expSelected.delete(cb.dataset.id);
+  updateExpSelection();
+});
+$('#expSelAll').addEventListener('change', () => {
+  const m = viewMonth(), all = $('#expSelAll');
+  expSelected = all.checked ? new Set(m.expenses.map(r => r.id)) : new Set();
+  $$('#expBody .rowchk').forEach(cb => { cb.checked = expSelected.has(cb.dataset.id); });
+  updateExpSelection();
+});
 bindTable('#expBody', 'expenses', ['amt', 'paid'], {});
 bindTable('#cardBody', 'cards', ['bill', 'paid'], {});
 bindTable('#creditBody', 'credits', ['amt'], {allowNeg: true});
