@@ -2425,8 +2425,9 @@ async function driveSyncNow(opts){
 setInterval(() => {
   if(!gAccessToken || gdrive.state !== 'ok' || document.hidden || persistTimer) return;
   queueDriveSync({quiet: true});
-}, 60000);
+}, 15000);
 window.addEventListener('focus', () => { if(gAccessToken && gdrive.state === 'ok') queueDriveSync({quiet: true}); });
+document.addEventListener('visibilitychange', () => { if(!document.hidden && gAccessToken && gdrive.state === 'ok') queueDriveSync({quiet: true}); });
 
 async function connectDrive(){
   if(!DRIVE_READY){ toast('Google Drive backup is not configured for this site yet.'); return; }
