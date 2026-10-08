@@ -335,7 +335,7 @@ ul.safe li{margin-bottom:6px}
 @media(max-width:720px){
   .topbar-inner{padding:10px 12px 0}
   .brand .sub{display:none}
-  .sync-chip{max-width:150px;padding:7px 10px}
+  .sync-chip{max-width:90px;padding:7px 8px;font-size:10px}
   nav.tabs button{padding:10px 11px;font-size:10.5px}
   main{padding:16px 10px 50px}
   .month-title{font-size:20px;width:100%}
@@ -375,7 +375,8 @@ ul.safe li{margin-bottom:6px}
   <div class="topbar-inner">
     <div class="topbar-row">
       <div class="brand"><div class="mark">₹</div><div><h1>Khaata</h1><span class="sub">Expense &amp; loan ledger</span></div></div>
-      <button class="sync-chip" id="syncChip" type="button" title="Backup &amp; sync status"><span class="dot"></span><span id="syncChipText">Browser only</span></button>
+      <button class="sync-chip" id="syncChip" type="button" title="Local folder backup status"><span class="dot"></span><span id="syncChipText">Local: off</span></button>
+      <button class="sync-chip" id="driveChip" type="button" title="Google Drive backup status"><span class="dot"></span><span id="driveChipText">Drive: off</span></button>
       <button class="hbtn" id="calcToggle" type="button" title="Calculator" aria-label="Calculator">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="2.5" width="16" height="19" rx="2.5"/><rect x="7.5" y="5.5" width="9" height="4" rx="1"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01"/></svg>
       </button>
@@ -2085,12 +2086,12 @@ function setFolder(state, msg){
   if(state === 'ok') folder.at = Date.now();
   const chipEl = $('#syncChip'), txt = $('#syncChipText');
   const map = {
-    unsupported: ['', 'Browser only'], off: ['', 'Browser only'], perm: ['warn', 'Reconnect folder'],
-    syncing: ['busy', 'Syncing…'], ok: ['ok', 'Synced ' + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'})], error: ['err', 'Sync problem']
+    unsupported: ['', 'Local: off'], off: ['', 'Local: off'], perm: ['warn', 'Local: reconnect'],
+    syncing: ['busy', 'Local: syncing…'], ok: ['ok', 'Local: ' + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'})], error: ['err', 'Local: error']
   };
   const [cls, t] = map[state];
   chipEl.className = 'sync-chip ' + cls; txt.textContent = t;
-  chipEl.title = dir ? 'Folder: ' + dir.name + '/' + FOLDER_FILE : 'Data is saved in this browser';
+  chipEl.title = dir ? 'Local folder: ' + dir.name + '/' + FOLDER_FILE : 'Local folder backup: not connected';
   setSaveState(); updateBanner(); renderFolderCard();
 }
 function updateBanner(){
@@ -2299,6 +2300,14 @@ function saveDriveIds(){ try{ localStorage.setItem(DRIVE_IDS_KEY, JSON.stringify
 function setDrive(state, msg){
   gdrive.state = state; if(msg !== undefined) gdrive.msg = msg;
   if(state === 'ok') gdrive.at = Date.now();
+  const chipEl = $('#driveChip'), txt = $('#driveChipText');
+  const map = {
+    unsupported: ['', 'Drive: off'], off: ['', 'Drive: off'], perm: ['warn', 'Drive: reconnect'],
+    syncing: ['busy', 'Drive: syncing…'], ok: ['ok', 'Drive: ' + new Date().toLocaleTimeString('en-IN', {hour: '2-digit', minute: '2-digit'})], error: ['err', 'Drive: error']
+  };
+  const [cls, t] = map[state];
+  chipEl.className = 'sync-chip ' + cls; txt.textContent = t;
+  chipEl.title = gAccessToken ? 'Google Drive: ' + DRIVE_FOLDER_NAME + '/' + DRIVE_FILE_NAME : 'Google Drive backup: not connected';
   renderDriveCard();
 }
 function renderDriveCard(){
@@ -2446,6 +2455,7 @@ async function disconnectDrive(){
   setDrive('off');
 }
 $('#connectDrive').onclick = connectDrive;
+$('#driveChip').onclick = () => { if(gdrive.state === 'perm') connectDrive(); else showTab('data'); };
 $('#disconnectDrive').onclick = disconnectDrive;
 $('#driveSyncNowBtn').onclick = () => queueDriveSync().then(() => { if(gdrive.state === 'ok') toast('Google Drive is up to date'); });
 
